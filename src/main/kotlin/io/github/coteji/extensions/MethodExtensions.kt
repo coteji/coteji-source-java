@@ -18,9 +18,9 @@ package io.github.coteji.extensions
 
 import com.github.javaparser.ast.body.MethodDeclaration
 
-fun MethodDeclaration.getAnnotationValue(annotationName: String): String {
+fun MethodDeclaration.getAnnotationValue(annotationName: String): String? {
     val annotation = this.annotations.find { it.nameAsString == annotationName }
-            ?: throw RuntimeException("No annotation with name '$annotationName'")
+            ?: return null
     return annotation.asSingleMemberAnnotationExpr().memberValue.asStringLiteralExpr().value
 }
 

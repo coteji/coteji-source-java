@@ -22,6 +22,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class JavaCodeSourceTest {
@@ -46,7 +49,6 @@ class JavaCodeSourceTest {
     )
     private val currentTimeTest: CotejiTest = CotejiTest(
             name = "[TEST] Current Time",
-            id = "COT-111",
             content = "Open Reminders App\nCheck Current Time With Precision In Minutes [ 2 ]",
             attributes = mapOf()
     )
@@ -75,5 +77,36 @@ class JavaCodeSourceTest {
                         deleteReminderTest,
                         currentDateTest,
                         currentTimeTest)
+    }
+
+    @ParameterizedTest
+    @MethodSource("searchCriteriaData")
+    fun testGetTestsBySearchCriteria(searchCriteria: String, expectedTests: List<CotejiTest>) {
+        assertThat(javaCodeSource.getTests(searchCriteria))
+                .containsExactlyInAnyOrderElementsOf(expectedTests)
+    }
+
+    private fun searchCriteriaData(): List<Arguments> {
+        return listOf(
+                Arguments.of("+method:RemindersTest.deleteReminder", listOf(deleteReminderTest)),
+                Arguments.of("-method:RemindersTest.deleteReminder", listOf(createReminderTest, currentDateTest, currentTimeTest)),
+                Arguments.of("+method:RemindersTest.createReminder +method:RemindersTest.deleteReminder", listOf(createReminderTest, deleteReminderTest)),
+                Arguments.of("+class:DateTimeTest", listOf(currentDateTest, currentTimeTest)),
+                Arguments.of("+class:DateTimeTest +class:RemindersTest", listOf(createReminderTest, deleteReminderTest, currentDateTest, currentTimeTest)),
+                Arguments.of("-class:DateTimeTest", listOf(createReminderTest, deleteReminderTest)),
+                Arguments.of("+class:DateTimeTest +class:RemindersTest -method:RemindersTest.deleteReminder", listOf(createReminderTest, currentDateTest, currentTimeTest)),
+                Arguments.of("+class:DateTimeTest +method:RemindersTest.deleteReminder", listOf(deleteReminderTest, currentDateTest, currentTimeTest)),
+                Arguments.of("+package:org.example.tests", listOf(createReminderTest, deleteReminderTest, currentDateTest, currentTimeTest)),
+                Arguments.of("+package:org.example.tests -package:org.example.tests.datetime", listOf(createReminderTest, deleteReminderTest)),
+                Arguments.of("-package:org.example.tests.datetime", listOf(createReminderTest, deleteReminderTest)),
+                Arguments.of("+package:org.example.tests -class:RemindersTest", listOf(currentDateTest, currentTimeTest)),
+                Arguments.of("+annotationName:TestCase", listOf(createReminderTest, deleteReminderTest, currentDateTest)),
+                Arguments.of("-annotationName:TestCase", listOf(currentTimeTest)),
+                Arguments.of("+annotationValue:UserStories,\"COT-10\"", listOf(currentDateTest, currentTimeTest)),
+                Arguments.of("+annotationValueContains:UserStories,COT-1", listOf(createReminderTest, currentDateTest, currentTimeTest)),
+                Arguments.of("+annotationAttributeValue:Test,dataProvider,\"createReminderData\"", listOf(createReminderTest)),
+                Arguments.of("+annotationAttributeValueContains:Test,groups,smoke", listOf(createReminderTest, currentDateTest)),
+
+                )
     }
 }

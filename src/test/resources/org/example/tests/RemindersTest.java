@@ -1,8 +1,8 @@
 package org.example.tests;
 
 public class RemindersTest {
-    @Test(dataProvider = "createReminderData")
-    @UserStories({"COT-1"})
+    @Test(dataProvider = "createReminderData", groups = {"reminders", "smoke"})
+    @UserStories("COT-1")
     @TestCase("COT-101")
     public void createReminder(Reminder reminder) {
         NavigationSteps.openRemindersApp();
@@ -10,8 +10,8 @@ public class RemindersTest {
         ReminderSteps.checkLastReminder(reminder);
     }
 
-    @Test(dataProvider = "deleteReminderData")
-    @UserStories({"COT-2"})
+    @Test(dataProvider = "deleteReminderData", groups = {"reminders"})
+    @UserStories("COT-2")
     @TestCase("COT-102")
     public void deleteReminder(Reminder reminder) {
         NavigationSteps.openRemindersApp();

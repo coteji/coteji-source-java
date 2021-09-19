@@ -21,13 +21,14 @@ import com.github.javaparser.utils.SourceRoot
 import io.github.coteji.core.TestsSource
 import io.github.coteji.extensions.getAnnotationValue
 import io.github.coteji.extensions.hasAnnotation
+import io.github.coteji.filter.TestsFilter
 import io.github.coteji.model.CotejiTest
 import java.io.File
 
 class JavaCodeSource(
         private val testsDir: String,
         private val isTest: MethodDeclaration.() -> Boolean = { this.hasAnnotation("Test") },
-        private val getId: MethodDeclaration.() -> String = { this.getAnnotationValue("TestCase") },
+        private val getId: MethodDeclaration.() -> String? = { this.getAnnotationValue("TestCase") },
         private val getTestName: MethodDeclaration.() -> String = { this.nameAsString },
         private val lineTransform: String.() -> String = { this },
         private val getAttributes: MethodDeclaration.() -> Map<String, Any> = { HashMap() },
@@ -40,8 +41,8 @@ class JavaCodeSource(
                 .tryToParse("")
                 .filter { it.isSuccessful }
                 .map { it.result.get() }
-                .forEach { compilationUnit ->
-                    compilationUnit.findAll(MethodDeclaration::class.java).forEach { method ->
+                .forEach { javaFile ->
+                    javaFile.findAll(MethodDeclaration::class.java).forEach { method ->
                         if (method.isTest()) {
                             result.add(parseMethod(method))
                         }
@@ -51,7 +52,49 @@ class JavaCodeSource(
     }
 
     override fun getTests(searchCriteria: String): List<CotejiTest> {
-        TODO("Not yet implemented")
+        val filter = TestsFilter(searchCriteria)
+        val result = arrayListOf<CotejiTest>()
+        val packagePath = File(testsDir).toPath()
+        if (filter.hasOnlyPackagesAndClasses()) {
+            SourceRoot(packagePath)
+                    .tryToParse("")
+                    .filter { it.isSuccessful }
+                    .map { it.result.get() }
+                    .forEach { javaFile ->
+                        if (filter.classIncluded(javaFile)) {
+                            javaFile.findAll(MethodDeclaration::class.java).forEach { method ->
+                                result.add(parseMethod(method))
+                            }
+                        }
+                    }
+        } else if (filter.hasOnlyMethods()) {
+            SourceRoot(packagePath)
+                    .tryToParse("")
+                    .filter { it.isSuccessful }
+                    .map { it.result.get() }
+                    .forEach { javaFile ->
+                        if (filter.classIncluded(javaFile)) {
+                            javaFile.findAll(MethodDeclaration::class.java).forEach { method ->
+                                if (filter.methodIncluded(method)) {
+                                    result.add(parseMethod(method))
+                                }
+                            }
+                        }
+                    }
+        } else {
+            SourceRoot(packagePath)
+                    .tryToParse("")
+                    .filter { it.isSuccessful }
+                    .map { it.result.get() }
+                    .forEach { javaFile ->
+                        javaFile.findAll(MethodDeclaration::class.java).forEach { method ->
+                            if (filter.methodIncluded(method)) {
+                                result.add(parseMethod(method))
+                            }
+                        }
+                    }
+        }
+        return result
     }
 
     override fun updateIdentifiers(tests: List<CotejiTest>) {
