@@ -2,7 +2,7 @@ package org.example.tests.datetime;
 
 public class DateTimeTest {
 
-    @Test(groups = {"datetime", "smoke"})
+    @Test(groups = { "datetime", "smoke" })
     @UserStories("COT-10")
     @TestCase("COT-110")
     public void currentDate() {
@@ -10,7 +10,7 @@ public class DateTimeTest {
         DateTimeSteps.checkCurrentDate();
     }
 
-    @Test(groups = {"datetime"})
+    @Test(groups = { "datetime" })
     @UserStories("COT-10")
     public void currentTime() {
         NavigationSteps.openRemindersApp();

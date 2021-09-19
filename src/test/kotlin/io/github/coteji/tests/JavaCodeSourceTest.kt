@@ -25,6 +25,8 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import java.io.File
+import java.nio.file.Files
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class JavaCodeSourceTest {
@@ -108,5 +110,76 @@ class JavaCodeSourceTest {
                 Arguments.of("+annotationAttributeValueContains:Test,groups,smoke", listOf(createReminderTest, currentDateTest)),
 
                 )
+    }
+
+    @Test
+    fun testUpdateTestId() {
+        val file1 = File("src/test/resources/org/example/tests/Test1.java")
+        val file2 = File("src/test/resources/org/example/tests/Test2.java")
+        Files.write(file1.toPath(), """
+            package org.example.tests;
+            public class Test1 {
+                @Test
+                public void someTest() {
+                    NavigationSteps.openApp();
+                    SomeSteps.doSomething();
+                }
+            }
+        """.trimIndent().toByteArray())
+        Files.write(file2.toPath(), """
+            package org.example.tests;
+            public class Test2 {
+                @Test
+                @TestCase("COT-100")
+                public void anotherTest() {
+                    NavigationSteps.openApp();
+                    SomeSteps.doSomethingElse();
+                }
+            }
+        """.trimIndent().toByteArray())
+        val test1 = CotejiTest(
+                name = "[TEST] Some Test",
+                id = "COT-123",
+                content = "Open App\nDo Something",
+                attributes = mapOf()
+        )
+        val test2 = CotejiTest(
+                name = "[TEST] Another Test",
+                id = "COT-124",
+                content = "Open App\nDo Something Else",
+                attributes = mapOf()
+        )
+        try {
+            javaCodeSource.updateIdentifiers(listOf(test1, test2))
+            assertThat(file1).hasContent("""
+            package org.example.tests;
+            
+            public class Test1 {
+            
+                @Test
+                @TestCase("COT-123")
+                public void someTest() {
+                    NavigationSteps.openApp();
+                    SomeSteps.doSomething();
+                }
+            }
+        """.trimIndent())
+            assertThat(file2).hasContent("""
+            package org.example.tests;
+            
+            public class Test2 {
+            
+                @Test
+                @TestCase("COT-124")
+                public void anotherTest() {
+                    NavigationSteps.openApp();
+                    SomeSteps.doSomethingElse();
+                }
+            }
+        """.trimIndent())
+        } finally {
+            Files.delete(file1.toPath())
+            Files.delete(file2.toPath())
+        }
     }
 }

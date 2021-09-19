@@ -24,11 +24,12 @@ import io.github.coteji.extensions.hasAnnotation
 import io.github.coteji.filter.TestsFilter
 import io.github.coteji.model.CotejiTest
 import java.io.File
+import java.nio.file.Files
 
 class JavaCodeSource(
         private val testsDir: String,
         private val isTest: MethodDeclaration.() -> Boolean = { this.hasAnnotation("Test") },
-        private val getId: MethodDeclaration.() -> String? = { this.getAnnotationValue("TestCase") },
+        private val testIdAnnotationName: String = "TestCase",
         private val getTestName: MethodDeclaration.() -> String = { this.nameAsString },
         private val lineTransform: String.() -> String = { this },
         private val getAttributes: MethodDeclaration.() -> Map<String, Any> = { HashMap() },
@@ -98,7 +99,28 @@ class JavaCodeSource(
     }
 
     override fun updateIdentifiers(tests: List<CotejiTest>) {
-        TODO("Not yet implemented")
+        val packagePath = File(testsDir).toPath()
+        SourceRoot(packagePath)
+                .tryToParse("")
+                .filter { it.isSuccessful }
+                .map { it.result.get() }
+                .forEach { javaFile ->
+                    var fileChanged = false
+                    javaFile.findAll(MethodDeclaration::class.java).forEach { method ->
+                        if (method.isTest()) {
+                            val currentTest = parseMethod(method)
+                            val test = tests.find { it.name == currentTest.name && it.content == currentTest.content }
+                            if (test != null) {
+                                method.annotations.find { it.nameAsString == testIdAnnotationName }?.remove()
+                                method.addSingleMemberAnnotation(testIdAnnotationName, "\"${test.id}\"")
+                                fileChanged = true
+                            }
+                        }
+                    }
+                    if (fileChanged) {
+                        Files.write(javaFile.storage.get().path, javaFile.toString().toByteArray())
+                    }
+                }
     }
 
     private fun parseMethod(method: MethodDeclaration): CotejiTest {
@@ -108,7 +130,7 @@ class JavaCodeSource(
         val content = statements.joinToString("\n") { it.toString().lineTransform() }
         return CotejiTest(
                 name = method.getTestName(),
-                id = method.getId(),
+                id = method.getAnnotationValue(testIdAnnotationName),
                 content = content,
                 attributes = method.getAttributes())
     }
