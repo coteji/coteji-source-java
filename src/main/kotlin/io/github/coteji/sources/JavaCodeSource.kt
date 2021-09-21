@@ -27,11 +27,17 @@ import java.io.File
 import java.nio.file.Files
 
 class JavaCodeSource(
+        // root directory path where your tests reside (mandatory)
         private val testsDir: String,
+        // function that defines what method is considered a test (default: methods with @Test annotation)
         private val isTest: MethodDeclaration.() -> Boolean = { this.hasAnnotation("Test") },
+        // annotation name where you keep the test ID from the target TMS (default: "TestCase")
         private val testIdAnnotationName: String = "TestCase",
+        // function that maps method to the test name in the target TMS (default: method name)
         private val getTestName: MethodDeclaration.() -> String = { this.nameAsString },
+        // function that transforms every statement from Java method for the target TMS (default: line as is)
         private val lineTransform: String.() -> String = { this },
+        // function that maps method to the map of test attributes. See the required attributes in the target package docs
         private val getAttributes: MethodDeclaration.() -> Map<String, Any> = { HashMap() },
 ) : TestsSource {
 
