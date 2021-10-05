@@ -51,7 +51,7 @@ class JavaCodeSource(
                 .forEach { javaFile ->
                     javaFile.findAll(MethodDeclaration::class.java).forEach { method ->
                         if (method.isTest()) {
-                            result.add(parseMethod(method))
+                            result.add(method.toCotejiTest())
                         }
                     }
                 }
@@ -70,7 +70,9 @@ class JavaCodeSource(
                     .forEach { javaFile ->
                         if (filter.classIncluded(javaFile)) {
                             javaFile.findAll(MethodDeclaration::class.java).forEach { method ->
-                                result.add(parseMethod(method))
+                                if (method.isTest()) {
+                                    result.add(method.toCotejiTest())
+                                }
                             }
                         }
                     }
@@ -82,8 +84,8 @@ class JavaCodeSource(
                     .forEach { javaFile ->
                         if (filter.classIncluded(javaFile)) {
                             javaFile.findAll(MethodDeclaration::class.java).forEach { method ->
-                                if (filter.methodIncluded(method)) {
-                                    result.add(parseMethod(method))
+                                if (method.isTest() && filter.methodIncluded(method)) {
+                                    result.add(method.toCotejiTest())
                                 }
                             }
                         }
@@ -95,8 +97,8 @@ class JavaCodeSource(
                     .map { it.result.get() }
                     .forEach { javaFile ->
                         javaFile.findAll(MethodDeclaration::class.java).forEach { method ->
-                            if (filter.methodIncluded(method)) {
-                                result.add(parseMethod(method))
+                            if (method.isTest() && filter.methodIncluded(method)) {
+                                result.add(method.toCotejiTest())
                             }
                         }
                     }
@@ -114,7 +116,7 @@ class JavaCodeSource(
                     var fileChanged = false
                     javaFile.findAll(MethodDeclaration::class.java).forEach { method ->
                         if (method.isTest()) {
-                            val currentTest = parseMethod(method)
+                            val currentTest = method.toCotejiTest()
                             val test = tests.find { it.name == currentTest.name && it.content == currentTest.content }
                             if (test != null) {
                                 method.annotations.find { it.nameAsString == testIdAnnotationName }?.remove()
@@ -129,16 +131,15 @@ class JavaCodeSource(
                 }
     }
 
-    private fun parseMethod(method: MethodDeclaration): CotejiTest {
-        val statements = method.body
-                .orElseThrow { RuntimeException("Method ${method.nameAsString} has no body") }
-                .statements
+    fun MethodDeclaration.toCotejiTest(): CotejiTest {
+        val statements = this.body
+            .orElseThrow { RuntimeException("Method ${this.nameAsString} has no body") }
+            .statements
         val content = statements.joinToString("\n") { it.toString().lineTransform() }
         return CotejiTest(
-                name = method.getTestName(),
-                id = method.getAnnotationValue(testIdAnnotationName),
-                content = content,
-                attributes = method.getAttributes())
+            name = this.getTestName(),
+            id = this.getAnnotationValue(testIdAnnotationName),
+            content = content,
+            attributes = this.getAttributes())
     }
-
 }

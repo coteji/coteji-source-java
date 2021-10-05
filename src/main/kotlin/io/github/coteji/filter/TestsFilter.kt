@@ -23,7 +23,7 @@ class TestsFilter(searchCriteria: String) {
     private val entries: List<FilterEntry>
 
     init {
-        if (searchCriteria.isEmpty()) {
+        if (searchCriteria.isBlank()) {
             throw RuntimeException("Search criteria cannot be empty")
         }
         entries = searchCriteria.trim().split(" ").map {

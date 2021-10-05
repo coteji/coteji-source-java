@@ -20,4 +20,9 @@ public class RemindersTest {
         CommonUiSteps.refreshPage();
         ReminderSteps.checkReminderIsAbsent(reminder);
     }
+
+    public void nonTestMethod() {
+        someCodeHere();
+    }
+
 }

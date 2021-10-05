@@ -13,3 +13,9 @@ jobs:
       run: |
         chmod +x gradlew
         ./gradlew test
+    - uses: codecov/codecov-action@v2
+      with:
+        files: build/reports/jacoco/test/jacocoTestReport.xml
+        name: codecov-umbrella
+        fail_ci_if_error: true
+        verbose: true
