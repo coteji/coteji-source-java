@@ -1,5 +1,5 @@
 ![CI](https://github.com/coteji/coteji-source-java/workflows/CI/badge.svg?branch=master)
-
+[![codecov](https://codecov.io/gh/coteji/coteji-source-java/branch/master/graph/badge.svg?token=ednaZwnuer)](https://codecov.io/gh/coteji/coteji-source-java)
 
 # Coteji Source: Java
 
