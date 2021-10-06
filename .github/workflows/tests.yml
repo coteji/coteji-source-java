@@ -13,6 +13,9 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew test
+      - name: Print Jacoco report file
+        run: |
+          cat build/reports/jacoco/test/jacocoTestReport.xml
       - uses: codecov/codecov-action@v2
         with:
           files: build/reports/jacoco/test/jacocoTestReport.xml
