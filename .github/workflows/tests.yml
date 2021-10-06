@@ -8,14 +8,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Run tests
-      run: |
-        chmod +x gradlew
-        ./gradlew test
-    - uses: codecov/codecov-action@v2
-      with:
-        files: build/reports/jacoco/test/jacocoTestReport.xml
-        name: codecov-umbrella
-        fail_ci_if_error: true
-        verbose: true
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run: |
+          chmod +x gradlew
+          ./gradlew test
+      - uses: codecov/codecov-action@v2
+        with:
+          files: build/reports/jacoco/test/jacocoTestReport.xml
+          name: codecov-umbrella
+          fail_ci_if_error: true
+          verbose: true
