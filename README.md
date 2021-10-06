@@ -1,5 +1,6 @@
 ![CI](https://github.com/coteji/coteji-source-java/workflows/CI/badge.svg?branch=master)
 
+
 # Coteji Source: Java
 
 This package allows Coteji to read tests from Java code (Junit, TestNG, etc.).
