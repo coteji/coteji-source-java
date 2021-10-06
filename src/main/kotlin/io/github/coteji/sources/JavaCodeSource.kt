@@ -25,36 +25,34 @@ import io.github.coteji.filter.TestsFilter
 import io.github.coteji.model.CotejiTest
 import java.io.File
 import java.nio.file.Files
+import java.nio.file.Path
 
 class JavaCodeSource(
-        // root directory path where your tests reside (mandatory)
-        private val testsDir: String,
-        // function that defines what method is considered a test (default: methods with @Test annotation)
-        private val isTest: MethodDeclaration.() -> Boolean = { this.hasAnnotation("Test") },
-        // annotation name where you keep the test ID from the target TMS (default: "TestCase")
-        private val testIdAnnotationName: String = "TestCase",
-        // function that maps method to the test name in the target TMS (default: method name)
-        private val getTestName: MethodDeclaration.() -> String = { this.nameAsString },
-        // function that transforms every statement from Java method for the target TMS (default: line as is)
-        private val lineTransform: String.() -> String = { this },
-        // function that maps method to the map of test attributes. See the required attributes in the target package docs
-        private val getAttributes: MethodDeclaration.() -> Map<String, Any> = { HashMap() },
+    // root directory path where your tests reside (mandatory)
+    private val testsDir: String,
+    // function that defines what method is considered a test (default: methods with @Test annotation)
+    private val isTest: MethodDeclaration.() -> Boolean = { this.hasAnnotation("Test") },
+    // annotation name where you keep the test ID from the target TMS (default: "TestCase")
+    private val testIdAnnotationName: String = "TestCase",
+    // function that maps method to the test name in the target TMS (default: method name)
+    private val getTestName: MethodDeclaration.() -> String = { this.nameAsString },
+    // function that transforms every statement from Java method for the target TMS (default: line as is)
+    private val lineTransform: String.() -> String = { this },
+    // function that maps method to the map of test attributes. See the required attributes in the target package docs
+    private val getAttributes: MethodDeclaration.() -> Map<String, Any> = { HashMap() },
 ) : TestsSource {
 
     override fun getAll(): List<CotejiTest> {
         val result = arrayListOf<CotejiTest>()
         val packagePath = File(testsDir).toPath()
-        SourceRoot(packagePath)
-                .tryToParse("")
-                .filter { it.isSuccessful }
-                .map { it.result.get() }
-                .forEach { javaFile ->
-                    javaFile.findAll(MethodDeclaration::class.java).forEach { method ->
-                        if (method.isTest()) {
-                            result.add(method.toCotejiTest())
-                        }
+        findJavaFiles(packagePath)
+            .forEach { javaFile ->
+                javaFile.findAll(MethodDeclaration::class.java).forEach { method ->
+                    if (method.isTest()) {
+                        result.add(method.toCotejiTest())
                     }
                 }
+            }
         return result
     }
 
@@ -63,73 +61,66 @@ class JavaCodeSource(
         val result = arrayListOf<CotejiTest>()
         val packagePath = File(testsDir).toPath()
         if (filter.hasOnlyPackagesAndClasses()) {
-            SourceRoot(packagePath)
-                    .tryToParse("")
-                    .filter { it.isSuccessful }
-                    .map { it.result.get() }
-                    .forEach { javaFile ->
-                        if (filter.classIncluded(javaFile)) {
-                            javaFile.findAll(MethodDeclaration::class.java).forEach { method ->
-                                if (method.isTest()) {
-                                    result.add(method.toCotejiTest())
-                                }
+            findJavaFiles(packagePath)
+                .forEach { javaFile ->
+                    if (filter.classIncluded(javaFile)) {
+                        javaFile.findAll(MethodDeclaration::class.java).forEach { method ->
+                            if (method.isTest()) {
+                                result.add(method.toCotejiTest())
                             }
                         }
                     }
+                }
         } else if (filter.hasOnlyMethods()) {
-            SourceRoot(packagePath)
-                    .tryToParse("")
-                    .filter { it.isSuccessful }
-                    .map { it.result.get() }
-                    .forEach { javaFile ->
-                        if (filter.classIncluded(javaFile)) {
-                            javaFile.findAll(MethodDeclaration::class.java).forEach { method ->
-                                if (method.isTest() && filter.methodIncluded(method)) {
-                                    result.add(method.toCotejiTest())
-                                }
-                            }
-                        }
-                    }
-        } else {
-            SourceRoot(packagePath)
-                    .tryToParse("")
-                    .filter { it.isSuccessful }
-                    .map { it.result.get() }
-                    .forEach { javaFile ->
+            findJavaFiles(packagePath)
+                .forEach { javaFile ->
+                    if (filter.classIncluded(javaFile)) {
                         javaFile.findAll(MethodDeclaration::class.java).forEach { method ->
                             if (method.isTest() && filter.methodIncluded(method)) {
                                 result.add(method.toCotejiTest())
                             }
                         }
                     }
+                }
+        } else {
+            findJavaFiles(packagePath)
+                .forEach { javaFile ->
+                    javaFile.findAll(MethodDeclaration::class.java).forEach { method ->
+                        if (method.isTest() && filter.methodIncluded(method)) {
+                            result.add(method.toCotejiTest())
+                        }
+                    }
+                }
         }
         return result
     }
 
     override fun updateIdentifiers(tests: List<CotejiTest>) {
         val packagePath = File(testsDir).toPath()
-        SourceRoot(packagePath)
-                .tryToParse("")
-                .filter { it.isSuccessful }
-                .map { it.result.get() }
-                .forEach { javaFile ->
-                    var fileChanged = false
-                    javaFile.findAll(MethodDeclaration::class.java).forEach { method ->
-                        if (method.isTest()) {
-                            val currentTest = method.toCotejiTest()
-                            val test = tests.find { it.name == currentTest.name && it.content == currentTest.content }
-                            if (test != null) {
-                                method.annotations.find { it.nameAsString == testIdAnnotationName }?.remove()
-                                method.addSingleMemberAnnotation(testIdAnnotationName, "\"${test.id}\"")
-                                fileChanged = true
-                            }
+        findJavaFiles(packagePath)
+            .forEach { javaFile ->
+                var fileChanged = false
+                javaFile.findAll(MethodDeclaration::class.java).forEach { method ->
+                    if (method.isTest()) {
+                        val currentTest = method.toCotejiTest()
+                        val test = tests.find { it.name == currentTest.name && it.content == currentTest.content }
+                        if (test != null) {
+                            method.annotations.find { it.nameAsString == testIdAnnotationName }?.remove()
+                            method.addSingleMemberAnnotation(testIdAnnotationName, "\"${test.id}\"")
+                            fileChanged = true
                         }
                     }
-                    if (fileChanged) {
-                        Files.write(javaFile.storage.get().path, javaFile.toString().toByteArray())
-                    }
                 }
+                if (fileChanged) {
+                    Files.write(javaFile.storage.get().path, javaFile.toString().toByteArray())
+                }
+            }
     }
+
+    private fun findJavaFiles(packagePath: Path) = SourceRoot(packagePath)
+        .tryToParse("")
+        .filter { it.isSuccessful }
+        .map { it.result.get() }
 
     fun MethodDeclaration.toCotejiTest(): CotejiTest {
         val statements = this.body
@@ -140,6 +131,7 @@ class JavaCodeSource(
             name = this.getTestName(),
             id = this.getAnnotationValue(testIdAnnotationName),
             content = content,
-            attributes = this.getAttributes())
+            attributes = this.getAttributes()
+        )
     }
 }
