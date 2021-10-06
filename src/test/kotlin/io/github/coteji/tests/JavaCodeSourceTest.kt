@@ -19,11 +19,11 @@ import io.github.coteji.extensions.separateByUpperCaseLetters
 import io.github.coteji.model.CotejiTest
 import io.github.coteji.sources.JavaCodeSource
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertThrowsExactly
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -143,6 +143,26 @@ class JavaCodeSourceTest {
             ),
 
             )
+    }
+
+    @ParameterizedTest
+    @MethodSource("searchCriteriaNegativeData")
+    fun testGetTestsBySearchCriteriaNegative(searchCriteria: String, expectedMessage: String) {
+        val exception = assertThrows<RuntimeException> {
+            javaCodeSource.getTests(searchCriteria)
+        }
+        assertThat(exception.message).isEqualTo(expectedMessage)
+    }
+
+    private fun searchCriteriaNegativeData(): List<Arguments> {
+        return listOf(
+            Arguments.of("+annotationFoo:Bar", "Annotation condition not recognized"),
+            Arguments.of("+annotationAttributeValue:a,b", "Condition value should contain 3 values separated by comma"),
+            Arguments.of(
+                "+annotationAttributeValueContains:a,b,c,d",
+                "Condition value should contain 3 values separated by comma"
+            )
+        )
     }
 
     @Test
