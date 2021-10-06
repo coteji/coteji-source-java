@@ -28,14 +28,13 @@ tasks.jacocoTestReport {
         xml.required.set(true)
         csv.required.set(false)
     }
-    finalizedBy(tasks.jacocoTestCoverageVerification)
 }
 
 tasks.jacocoTestCoverageVerification {
     violationRules {
         rule {
             limit {
-                minimum = "0.98".toBigDecimal()
+                minimum = "0.99".toBigDecimal()
             }
         }
     }

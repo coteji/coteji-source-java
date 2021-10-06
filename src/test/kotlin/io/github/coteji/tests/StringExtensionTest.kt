@@ -26,4 +26,9 @@ class StringExtensionTest {
         assertThat("myTestMethod".separateByUpperCaseLetters())
                 .isEqualTo("My Test Method")
     }
+
+    @Test
+    fun testSeparateEmptyStringByUpperCaseLetters() {
+        assertThat("".separateByUpperCaseLetters()).isEqualTo("")
+    }
 }
