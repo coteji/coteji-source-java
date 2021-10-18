@@ -13,6 +13,7 @@ Import the package in your configuration file like this:
 @file:DependsOn("io.github.coteji:coteji-source-java:0.2.0")
 
 import io.github.coteji.sources.*
+import io.github.coteji.extensions.*
 ```
 
 ## Configuration
@@ -20,17 +21,16 @@ import io.github.coteji.sources.*
 Here is the example of configuration:
 
 ```kotlin
-setSource(
-        JavaCodeSource(
-                testsDir = "src/test/java/org/example/tests",
-                getTestName = { "[TEST] " + this.nameAsString.separateByUpperCaseLetters() },
-                lineTransform = {
-                    this.substringAfter(".")
-                            .separateByUpperCaseLetters()
-                            .replace("();", "")
-                            .replace("(", " [ ")
-                            .replace(");", " ]")
-                })
+source = JavaCodeSource(
+        testsDir = "src/test/java/org/example/tests",
+        getTestName = { "[TEST] " + this.nameAsString.separateByUpperCaseLetters() },
+        lineTransform = {
+            this.substringAfter(".")
+                    .separateByUpperCaseLetters()
+                    .replace("();", "")
+                    .replace("(", " [ ")
+                    .replace(");", " ]")
+        }
 )
 ```
 
