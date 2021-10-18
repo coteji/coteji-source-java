@@ -5,7 +5,7 @@ plugins {
     jacoco
 }
 
-version = "0.1.0"
+version = "0.2.0"
 group = "io.github.coteji"
 
 repositories {
@@ -13,7 +13,7 @@ repositories {
 }
 
 dependencies {
-    implementation("io.github.coteji:coteji-core:0.1.1")
+    implementation("io.github.coteji:coteji-core:0.2.0")
     testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
     testImplementation("org.assertj:assertj-core:3.21.0")
     api("com.github.javaparser:javaparser-core:3.23.0")
