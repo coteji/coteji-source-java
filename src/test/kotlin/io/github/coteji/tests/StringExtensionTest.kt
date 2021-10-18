@@ -22,13 +22,13 @@ import org.junit.jupiter.api.Test
 
 class StringExtensionTest {
     @Test
-    fun testSeparateByUpperCaseLetters() {
+    fun `separate by uppercase letters`() {
         assertThat("myTestMethod".separateByUpperCaseLetters())
                 .isEqualTo("My Test Method")
     }
 
     @Test
-    fun testSeparateEmptyStringByUpperCaseLetters() {
+    fun `separate empty string by uppercase letters`() {
         assertThat("".separateByUpperCaseLetters()).isEqualTo("")
     }
 }

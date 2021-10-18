@@ -19,14 +19,14 @@ package io.github.coteji.filter
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body.MethodDeclaration
 
-class TestsFilter(searchCriteria: String) {
+class TestsFilter(query: String) {
     private val entries: List<FilterEntry>
 
     init {
-        if (searchCriteria.isBlank()) {
+        if (query.isBlank()) {
             throw RuntimeException("Search criteria cannot be empty")
         }
-        entries = searchCriteria.trim().split(" ").map {
+        entries = query.trim().split(" ").map {
             FilterEntry(
                     included = it.first() == '+',
                     type = it.substring(1).substringBefore(":"),

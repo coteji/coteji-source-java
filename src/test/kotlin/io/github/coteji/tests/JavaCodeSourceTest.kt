@@ -73,7 +73,7 @@ class JavaCodeSourceTest {
     }
 
     @Test
-    fun testGetAll() {
+    fun `get all`() {
         val actualTests = javaCodeSource.getAll()
         assertThat(actualTests)
             .containsExactlyInAnyOrder(
@@ -85,13 +85,13 @@ class JavaCodeSourceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("searchCriteriaData")
-    fun testGetTestsBySearchCriteria(searchCriteria: String, expectedTests: List<CotejiTest>) {
-        assertThat(javaCodeSource.getTests(searchCriteria))
+    @MethodSource("queryData")
+    fun `get tests by query`(query: String, expectedTests: List<CotejiTest>) {
+        assertThat(javaCodeSource.getTests(query))
             .containsExactlyInAnyOrderElementsOf(expectedTests)
     }
 
-    private fun searchCriteriaData(): List<Arguments> {
+    private fun queryData(): List<Arguments> {
         return listOf(
             Arguments.of("+method:RemindersTest.deleteReminder", listOf(deleteReminderTest)),
             Arguments.of(
@@ -146,15 +146,15 @@ class JavaCodeSourceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("searchCriteriaNegativeData")
-    fun testGetTestsBySearchCriteriaNegative(searchCriteria: String, expectedMessage: String) {
+    @MethodSource("queryNegativeData")
+    fun `get tests by query negative`(query: String, expectedMessage: String) {
         val exception = assertThrows<RuntimeException> {
-            javaCodeSource.getTests(searchCriteria)
+            javaCodeSource.getTests(query)
         }
         assertThat(exception.message).isEqualTo(expectedMessage)
     }
 
-    private fun searchCriteriaNegativeData(): List<Arguments> {
+    private fun queryNegativeData(): List<Arguments> {
         return listOf(
             Arguments.of("+annotationFoo:Bar", "Annotation condition not recognized"),
             Arguments.of("+annotationAttributeValue:a,b", "Condition value should contain 3 values separated by comma"),
@@ -166,7 +166,7 @@ class JavaCodeSourceTest {
     }
 
     @Test
-    fun testUpdateTestId() {
+    fun `update test ID`() {
         val file1 = File("src/test/resources/org/example/tests/Test1.java")
         val file2 = File("src/test/resources/org/example/tests/Test2.java")
         Files.write(
@@ -245,12 +245,12 @@ class JavaCodeSourceTest {
     }
 
     @Test
-    fun testParametersDefaultValues() {
+    fun `parameters with default values`() {
         assertThat(JavaCodeSource(testsDir = "src/test/resources/org/example/tests")).isNotNull
     }
 
     @Test
-    fun testEmptyBody() {
+    fun `test with empty body`() {
         val source = JavaCodeSource(testsDir = "src/test/resources/org/example/negative/emptybody")
         assertThrowsExactly(RuntimeException::class.java) { source.getAll() }
     }

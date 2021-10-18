@@ -25,7 +25,7 @@ import java.io.File
 
 class MethodExtensionTest {
     @Test
-    fun testHasAnnotation() {
+    fun `test has annotation`() {
         val javaFile = SourceRoot(File("src/test/resources/org/example/tests").toPath())
             .tryToParse("")
             .filter { it.isSuccessful }

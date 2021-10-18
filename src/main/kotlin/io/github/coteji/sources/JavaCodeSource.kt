@@ -56,8 +56,8 @@ class JavaCodeSource(
         return result
     }
 
-    override fun getTests(searchCriteria: String): List<CotejiTest> {
-        val filter = TestsFilter(searchCriteria)
+    override fun getTests(query: String): List<CotejiTest> {
+        val filter = TestsFilter(query)
         val result = arrayListOf<CotejiTest>()
         val packagePath = File(testsDir).toPath()
         if (filter.hasOnlyPackagesAndClasses()) {

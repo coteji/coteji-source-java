@@ -24,7 +24,7 @@ import org.junit.jupiter.params.provider.ValueSource
 class FilterTest {
     @ParameterizedTest
     @ValueSource(strings = ["", "  "])
-    fun testSearchCriteriaIsEmpty(searchCriteria: String) {
-        assertThrowsExactly(RuntimeException::class.java) { TestsFilter(searchCriteria) }
+    fun `query is empty`(query: String) {
+        assertThrowsExactly(RuntimeException::class.java) { TestsFilter(query) }
     }
 }
