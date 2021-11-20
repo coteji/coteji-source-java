@@ -15,9 +15,11 @@
  */
 package io.github.coteji.tests
 
+import io.github.coteji.core.Coteji
 import io.github.coteji.extensions.separateByUpperCaseLetters
 import io.github.coteji.model.CotejiTest
 import io.github.coteji.sources.JavaCodeSource
+import io.github.coteji.sources.javaCodeSource
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertThrowsExactly
 import org.junit.jupiter.api.BeforeAll
@@ -42,7 +44,8 @@ class JavaCodeSourceTest {
     private val deleteReminderTest: CotejiTest = CotejiTest(
         name = "[TEST] Delete Reminder",
         id = "COT-102",
-        content = "Open Reminders App\nAdd Reminder [ reminder ]\nDelete Last Reminder\nRefresh Page\nCheck Reminder Is Absent [ reminder ]",
+        content = "Open Reminders App\nAdd Reminder [ reminder ]\nDelete Last Reminder\nRefresh Page" +
+                "\nCheck Reminder Is Absent [ reminder ]",
         attributes = mapOf()
     )
     private val currentDateTest: CotejiTest = CotejiTest(
@@ -59,17 +62,16 @@ class JavaCodeSourceTest {
 
     @BeforeAll
     fun setUp() {
-        javaCodeSource = JavaCodeSource(
-            testsDir = "src/test/resources/org/example/tests",
-            getTestName = { "[TEST] " + this.nameAsString.separateByUpperCaseLetters() },
-            lineTransform = {
-                this.substringAfter(".")
-                    .separateByUpperCaseLetters()
-                    .replace("();", "")
-                    .replace("(", " [ ")
-                    .replace(");", " ]")
-            }
-        )
+        javaCodeSource = JavaCodeSource()
+        javaCodeSource.testsDir = "src/test/resources/org/example/tests"
+        javaCodeSource.getTestName = { "[TEST] " + this.nameAsString.separateByUpperCaseLetters() }
+        javaCodeSource.lineTransform = {
+            this.substringAfter(".")
+                .separateByUpperCaseLetters()
+                .replace("();", "")
+                .replace("(", " [ ")
+                .replace(");", " ]")
+        }
     }
 
     @Test
@@ -246,12 +248,26 @@ class JavaCodeSourceTest {
 
     @Test
     fun `parameters with default values`() {
-        assertThat(JavaCodeSource(testsDir = "src/test/resources/org/example/tests")).isNotNull
+        val coteji = Coteji()
+        val source = coteji.javaCodeSource {
+            testsDir = "src/test/resources/org/example/tests"
+        }
+        assertThat(source).isNotNull
+    }
+
+    @Test
+    fun `mandatory parameters not provided`() {
+        val coteji = Coteji()
+        val source = coteji.javaCodeSource {  }
+        assertThrowsExactly(IllegalArgumentException::class.java) { source.getAll() }
+        assertThrowsExactly(IllegalArgumentException::class.java) { source.getTests("") }
+        assertThrowsExactly(IllegalArgumentException::class.java) { source.updateIdentifiers(listOf()) }
     }
 
     @Test
     fun `test with empty body`() {
-        val source = JavaCodeSource(testsDir = "src/test/resources/org/example/negative/emptybody")
+        val source = JavaCodeSource()
+        source.testsDir = "src/test/resources/org/example/negative/emptybody"
         assertThrowsExactly(RuntimeException::class.java) { source.getAll() }
     }
 }
