@@ -17,5 +17,6 @@
 package io.github.coteji.extensions
 
 fun String.separateByUpperCaseLetters(): String {
-    return this.replace("\\p{Lu}".toRegex()) { capLetter -> " " + capLetter.value }.replaceFirstChar { it.uppercaseChar() }
+    return this.replace("\\p{Lu}".toRegex()) { capLetter -> " " + capLetter.value }
+        .replaceFirstChar { it.uppercaseChar() }
 }
