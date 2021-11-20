@@ -18,6 +18,7 @@ package io.github.coteji.sources
 
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.utils.SourceRoot
+import io.github.coteji.core.Coteji
 import io.github.coteji.core.TestsSource
 import io.github.coteji.extensions.getAnnotationValue
 import io.github.coteji.extensions.hasAnnotation
@@ -27,22 +28,23 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 
-class JavaCodeSource(
+class JavaCodeSource : TestsSource {
+
     // root directory path where your tests reside (mandatory)
-    private val testsDir: String,
+    lateinit var testsDir: String
     // function that defines what method is considered a test (default: methods with @Test annotation)
-    private val isTest: MethodDeclaration.() -> Boolean = { this.hasAnnotation("Test") },
+    var isTest: MethodDeclaration.() -> Boolean = { this.hasAnnotation("Test") }
     // annotation name where you keep the test ID from the target TMS (default: "TestCase")
-    private val testIdAnnotationName: String = "TestCase",
+    var testIdAnnotationName: String = "TestCase"
     // function that maps method to the test name in the target TMS (default: method name)
-    private val getTestName: MethodDeclaration.() -> String = { this.nameAsString },
+    var getTestName: MethodDeclaration.() -> String = { this.nameAsString }
     // function that transforms every statement from Java method for the target TMS (default: line as is)
-    private val lineTransform: String.() -> String = { this },
+    var lineTransform: String.() -> String = { this }
     // function that maps method to the map of test attributes. See the required attributes in the target package docs
-    private val getAttributes: MethodDeclaration.() -> Map<String, Any> = { HashMap() },
-) : TestsSource {
+    var getAttributes: MethodDeclaration.() -> Map<String, Any> = { HashMap() }
 
     override fun getAll(): List<CotejiTest> {
+        validateMandatoryParameters()
         val result = arrayListOf<CotejiTest>()
         val packagePath = File(testsDir).toPath()
         findJavaFiles(packagePath)
@@ -57,6 +59,7 @@ class JavaCodeSource(
     }
 
     override fun getTests(query: String): List<CotejiTest> {
+        validateMandatoryParameters()
         val filter = TestsFilter(query)
         val result = arrayListOf<CotejiTest>()
         val packagePath = File(testsDir).toPath()
@@ -96,6 +99,7 @@ class JavaCodeSource(
     }
 
     override fun updateIdentifiers(tests: List<CotejiTest>) {
+        validateMandatoryParameters()
         val packagePath = File(testsDir).toPath()
         findJavaFiles(packagePath)
             .forEach { javaFile ->
@@ -122,7 +126,13 @@ class JavaCodeSource(
         .filter { it.isSuccessful }
         .map { it.result.get() }
 
-    fun MethodDeclaration.toCotejiTest(): CotejiTest {
+    private fun validateMandatoryParameters() {
+        if (!this::testsDir.isInitialized) {
+            throw IllegalArgumentException("testsDir property cannot be empty")
+        }
+    }
+
+    private fun MethodDeclaration.toCotejiTest(): CotejiTest {
         val statements = this.body
             .orElseThrow { RuntimeException("Method ${this.nameAsString} has no body") }
             .statements
@@ -134,4 +144,10 @@ class JavaCodeSource(
             attributes = this.getAttributes()
         )
     }
+}
+
+infix fun Coteji.javaCodeSource(init: JavaCodeSource.() -> Unit): JavaCodeSource {
+    val source = JavaCodeSource()
+    source.init()
+    return source
 }
